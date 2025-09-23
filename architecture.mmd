@@ -1,0 +1,21 @@
+graph TD
+    A[Usuário] -->|Acessa| B(Frontend: Next.js)
+    B -->|Requisições API| C(Backend: Next.js API Routes)
+    C -->|Autenticação| D(NextAuth.js)
+    C -->|ORM| E(Prisma)
+    E -->|Banco de Dados| F(PostgreSQL - Supabase)
+    C -->|Geração PDF| G(pdf-lib)
+    C -->|Pagamentos (mock)| H(Stripe mock)
+    B -->|Monitoramento| I(Sentry)
+    B -->|Analytics| J(PostHog)
+    C -->|Monitoramento| I
+    C -->|Analytics| J
+    SubGraph Infraestrutura
+        B -- Deploy --> K(Vercel)
+        C -- Deploy --> K
+        F -- Hospedagem --> L(Supabase)
+    End
+    K -->|Monitoramento| I
+    K -->|Analytics| J
+
+

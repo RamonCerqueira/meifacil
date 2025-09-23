@@ -1,0 +1,461 @@
+openapi: 3.0.0
+info:
+  title: MEI Fácil API
+  description: API para gestão financeira de MEIs e freelancers
+  version: 1.0.0
+  contact:
+    name: MEI Fácil Support
+    email: support@meifacil.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Desenvolvimento
+  - url: https://meifacil.vercel.app/api
+    description: Produção
+
+paths:
+  /auth/login:
+    post:
+      summary: Login do usuário
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login realizado com sucesso
+        '401':
+          description: Credenciais inválidas
+
+  /auth/register:
+    post:
+      summary: Registro de novo usuário
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+              required:
+                - name
+                - email
+                - password
+      responses:
+        '201':
+          description: Usuário criado com sucesso
+        '400':
+          description: Dados inválidos
+
+  /clients:
+    get:
+      summary: Listar clientes do usuário
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+    
+    post:
+      summary: Criar novo cliente
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '201':
+          description: Cliente criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+
+  /clients/{id}:
+    get:
+      summary: Obter cliente por ID
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dados do cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+    
+    put:
+      summary: Atualizar cliente
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '200':
+          description: Cliente atualizado com sucesso
+    
+    delete:
+      summary: Deletar cliente
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cliente deletado com sucesso
+
+  /services:
+    get:
+      summary: Listar serviços do usuário
+      tags:
+        - Services
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de serviços
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+    
+    post:
+      summary: Criar novo serviço
+      tags:
+        - Services
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceInput'
+      responses:
+        '201':
+          description: Serviço criado com sucesso
+
+  /transactions:
+    get:
+      summary: Listar transações do usuário
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de transações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+    
+    post:
+      summary: Criar nova transação
+      tags:
+        - Transactions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInput'
+      responses:
+        '201':
+          description: Transação criada com sucesso
+
+  /receipts:
+    get:
+      summary: Listar recibos do usuário
+      tags:
+        - Receipts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de recibos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Receipt'
+    
+    post:
+      summary: Gerar novo recibo
+      tags:
+        - Receipts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiptInput'
+      responses:
+        '201':
+          description: Recibo gerado com sucesso
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        cpfCnpj:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ClientInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        cpfCnpj:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+      required:
+        - name
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: decimal
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ServiceInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+      required:
+        - name
+        - price
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        amount:
+          type: number
+          format: decimal
+        description:
+          type: string
+        date:
+          type: string
+          format: date-time
+        category:
+          type: string
+        clientId:
+          type: string
+        serviceId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    TransactionInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+          minLength: 2
+        date:
+          type: string
+          format: date-time
+        category:
+          type: string
+        clientId:
+          type: string
+        serviceId:
+          type: string
+      required:
+        - type
+        - amount
+        - description
+        - date
+
+    Receipt:
+      type: object
+      properties:
+        id:
+          type: string
+        receiptNumber:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        description:
+          type: string
+        issueDate:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [PENDING, PAID, OVERDUE, CANCELLED]
+        pdfUrl:
+          type: string
+        clientId:
+          type: string
+        serviceId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ReceiptInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+          minLength: 2
+        issueDate:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date-time
+        clientId:
+          type: string
+        serviceId:
+          type: string
+      required:
+        - amount
+        - description
+        - issueDate
+        - clientId
+
