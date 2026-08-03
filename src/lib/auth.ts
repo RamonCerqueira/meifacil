@@ -70,11 +70,26 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
       }
+      // Busca cpfCnpj do banco para detectar se onboarding é necessário
+      if (token.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { cpfCnpj: true, defaultSector: true },
+          })
+          token.cpfCnpj = dbUser?.cpfCnpj || null
+          token.defaultSector = dbUser?.defaultSector || null
+        } catch {
+          token.cpfCnpj = null
+        }
+      }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string
+        ;(session.user as any).cpfCnpj = token.cpfCnpj as string | null
+        ;(session.user as any).defaultSector = token.defaultSector as string | null
       }
       return session
     },

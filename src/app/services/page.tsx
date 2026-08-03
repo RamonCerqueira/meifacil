@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
+import { Briefcase, Plus, Trash2, Tag } from "lucide-react";
 
 interface Service {
   id: string;
@@ -94,8 +95,8 @@ export default function ServicesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
       </div>
     );
   }
@@ -104,40 +105,48 @@ export default function ServicesPage() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-7xl mx-auto space-y-8">
+      <div className="space-y-8">
         
-        {/* Cabeçalho */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+        {/* CABEÇALHO */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <span className="text-2xl">⚙️</span>
-              <h1 className="text-2xl font-bold text-slate-900">Catálogo de Serviços & Produtos</h1>
+              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                <Briefcase className="w-6 h-6" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                Catálogo de Serviços
+              </h1>
             </div>
-            <p className="text-sm text-slate-500 mt-1">
-              Cadastre os serviços prestados com tabela de preços padrão para agilizar orçamentos e recibos.
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+              Cadastre os serviços oferecidos com preços pré-fixados para agilizar lançamentos e emissão de recibos.
             </p>
           </div>
         </div>
 
-        {/* Formulário */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Cadastrar Novo Serviço</h2>
+        {/* FORMULÁRIO */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">Cadastrar Novo Serviço</h2>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Nome do Serviço</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Nome do Serviço
+              </label>
               <input
                 type="text"
-                placeholder="Ex: Consultoria Contábil, Design de Logo..."
+                placeholder="Ex: Manutenção de Computadores, Consultoria..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Preço Padrão (R$)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Preço Padrão (R$)
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -145,78 +154,88 @@ export default function ServicesPage() {
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Descrição</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Descrição (Opcional)
+              </label>
               <input
                 type="text"
-                placeholder="Detalhes do que está incluso no serviço"
+                placeholder="Detalhes do que está incluso"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
-            <div className="md:col-span-3 flex justify-end">
+            <div className="flex items-end sm:col-span-2 lg:col-span-3 justify-end">
               <button
                 type="submit"
                 disabled={submitting}
-                className="py-2.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-blue-600/20 disabled:opacity-50"
+                className="w-full sm:w-auto py-3.5 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
-                {submitting ? 'Salvando...' : 'Cadastrar Serviço'}
+                <Plus className="w-4 h-4" />
+                <span>{submitting ? 'Salvando...' : 'Cadastrar Serviço'}</span>
               </button>
             </div>
           </form>
         </div>
 
-        {/* Lista */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100">
-            <h3 className="text-lg font-bold text-slate-900">Serviços Cadastrados ({services.length})</h3>
+        {/* LISTAGEM DE SERVIÇOS */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">Serviços Cadastrados</h3>
+            <span className="text-xs text-slate-500 font-semibold">{services.length} Serviços</span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-slate-700 uppercase font-semibold text-xs border-b border-slate-200/80">
-                <tr>
-                  <th className="px-6 py-3">Serviço</th>
-                  <th className="px-6 py-3">Descrição</th>
-                  <th className="px-6 py-3 text-right">Preço</th>
-                  <th className="px-6 py-3 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {services.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
-                      Nenhum serviço cadastrado.
-                    </td>
-                  </tr>
-                ) : (
-                  services.map((srv) => (
-                    <tr key={srv.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-900">{srv.name}</td>
-                      <td className="px-6 py-4 text-slate-500">{srv.description || '-'}</td>
-                      <td className="px-6 py-4 text-right font-bold text-slate-900">
-                        R$ {Number(srv.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDelete(srv.id)}
-                          className="text-xs text-rose-600 hover:text-rose-800 font-semibold"
-                        >
-                          Excluir
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          {services.length === 0 ? (
+            <div className="p-12 text-center text-slate-500 dark:text-slate-400">
+              <Briefcase className="w-10 h-10 mx-auto text-slate-400 mb-2" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Nenhum serviço cadastrado ainda.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {services.map((srv) => (
+                <div 
+                  key={srv.id}
+                  className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-3 flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                          <Tag className="w-4 h-4" />
+                        </div>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-[160px]">{srv.name}</h4>
+                      </div>
+
+                      <button
+                        onClick={() => handleDelete(srv.id)}
+                        className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                        title="Excluir Serviço"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                      {srv.description || 'Sem descrição detalhada.'}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-extrabold text-slate-400">Valor Sugerido</span>
+                    <span className="text-base font-black text-indigo-600 dark:text-indigo-400">
+                      R$ {Number(srv.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

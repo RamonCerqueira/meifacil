@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { formatCpfCnpj } from "@/lib/validations";
+import { Users, Plus, Trash2, Mail, Phone, Building } from "lucide-react";
 
 interface Client {
   id: string;
@@ -103,8 +104,8 @@ export default function ClientsPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent" />
       </div>
     );
   }
@@ -113,79 +114,93 @@ export default function ClientsPage() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-7xl mx-auto space-y-8">
+      <div className="space-y-8">
         
-        {/* Cabeçalho */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+        {/* CABEÇALHO */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <span className="text-2xl">👥</span>
-              <h1 className="text-2xl font-bold text-slate-900">Gestão de Clientes</h1>
+              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                <Users className="w-6 h-6" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                Gestão de Clientes
+              </h1>
             </div>
-            <p className="text-sm text-slate-500 mt-1">
-              Cadastro unificado de tomadores de serviços e clientes (CPF/CNPJ).
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+              Cadastro unificado de tomadores de serviços e clientes para emissão de recibos.
             </p>
           </div>
         </div>
 
-        {/* Formulário de Cadastro */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Cadastrar Novo Cliente</h2>
+        {/* FORMULÁRIO DE CADASTRO */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">Cadastrar Novo Cliente</h2>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Nome / Razão Social</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Nome / Razão Social
+              </label>
               <input
                 type="text"
-                placeholder="Ex: Empresa ABC Ltda ou João da Silva"
+                placeholder="Ex: João Silva ou Empresa XYZ"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">CPF ou CNPJ</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                CPF ou CNPJ
+              </label>
               <input
                 type="text"
-                placeholder="000.000.000-00 ou 00.000.000/0001-00"
+                placeholder="000.000.000-00"
                 value={cpfCnpj}
                 onChange={(e) => setCpfCnpj(formatCpfCnpj(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">E-mail</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                E-mail
+              </label>
               <input
                 type="email"
                 placeholder="cliente@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Telefone / WhatsApp</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Telefone / WhatsApp
+              </label>
               <input
                 type="text"
                 placeholder="(11) 99999-9999"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Endereço Completo</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Endereço
+              </label>
               <input
                 type="text"
-                placeholder="Rua, número, cidade, UF"
+                placeholder="Rua, número, cidade"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
@@ -193,61 +208,77 @@ export default function ClientsPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-blue-600/20 disabled:opacity-50"
+                className="w-full py-3.5 px-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
-                {submitting ? 'Salvando...' : 'Cadastrar Cliente'}
+                <Plus className="w-4 h-4" />
+                <span>{submitting ? 'Salvando...' : 'Cadastrar Cliente'}</span>
               </button>
             </div>
           </form>
         </div>
 
-        {/* Lista de Clientes */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100">
-            <h3 className="text-lg font-bold text-slate-900">Clientes Cadastrados ({clients.length})</h3>
+        {/* LISTAGEM DE CLIENTES */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">Clientes Cadastrados</h3>
+            <span className="text-xs text-slate-500 font-semibold">{clients.length} Clientes</span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-slate-700 uppercase font-semibold text-xs border-b border-slate-200/80">
-                <tr>
-                  <th className="px-6 py-3">Nome</th>
-                  <th className="px-6 py-3">CPF/CNPJ</th>
-                  <th className="px-6 py-3">E-mail</th>
-                  <th className="px-6 py-3">Telefone</th>
-                  <th className="px-6 py-3 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {clients.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
-                      Nenhum cliente cadastrado.
-                    </td>
-                  </tr>
-                ) : (
-                  clients.map((cli) => (
-                    <tr key={cli.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-900">{cli.name}</td>
-                      <td className="px-6 py-4 text-slate-600 font-mono text-xs">
-                        {cli.cpfCnpj ? formatCpfCnpj(cli.cpfCnpj) : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-slate-500">{cli.email || '-'}</td>
-                      <td className="px-6 py-4 text-slate-500">{cli.phone || '-'}</td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDelete(cli.id)}
-                          className="text-xs text-rose-600 hover:text-rose-800 font-semibold"
-                        >
-                          Excluir
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          {clients.length === 0 ? (
+            <div className="p-12 text-center text-slate-500 dark:text-slate-400">
+              <Users className="w-10 h-10 mx-auto text-slate-400 mb-2" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Nenhum cliente cadastrado ainda.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {clients.map((cli) => (
+                <div 
+                  key={cli.id}
+                  className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-3 flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+                          {cli.name[0].toUpperCase()}
+                        </div>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-[180px]">{cli.name}</h4>
+                      </div>
+
+                      <button
+                        onClick={() => handleDelete(cli.id)}
+                        className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                        title="Excluir Cliente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
+                      {cli.cpfCnpj && (
+                        <p className="flex items-center space-x-1.5 font-mono text-[11px]">
+                          <Building className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{formatCpfCnpj(cli.cpfCnpj)}</span>
+                        </p>
+                      )}
+                      {cli.email && (
+                        <p className="flex items-center space-x-1.5 truncate">
+                          <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="truncate">{cli.email}</span>
+                        </p>
+                      )}
+                      {cli.phone && (
+                        <p className="flex items-center space-x-1.5">
+                          <Phone className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{cli.phone}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

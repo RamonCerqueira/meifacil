@@ -10,6 +10,23 @@ export const PROFIT_PRESUMPTION_RATES: Record<BusinessSector, number> = {
   TRANSPORT: 0.16, // 16% para Transporte de Passageiros
 }
 
+// Tabela oficial de valores base do DAS por categoria contábil (Salário Mínimo 2024 = R$ 1.412,00)
+// INSS (5% = R$ 70,60) / ISS (R$ 5,00) / ICMS (R$ 1,00) / Caminhoneiro (12% = R$ 169,44)
+export function getOfficialDasAmount(sector?: string): number {
+  switch (sector) {
+    case 'COMMERCE':
+    case 'INDUSTRY':
+      return 71.60 // R$ 70,60 INSS + R$ 1,00 ICMS
+    case 'TRANSPORT':
+      return 174.44 // MEI Caminhoneiro 12% INSS + ICMS/ISS
+    case 'HYBRID':
+      return 76.60 // R$ 70,60 INSS + R$ 1,00 ICMS + R$ 5,00 ISS
+    case 'SERVICE':
+    default:
+      return 75.60 // R$ 70,60 INSS + R$ 5,00 ISS
+  }
+}
+
 export interface TetoMEIResult {
   annualLimit: number
   grossRevenueYear: number
