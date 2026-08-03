@@ -32,9 +32,10 @@ export function IssuerInfoForm() {
   // Carregar dados existentes quando o componente montar
   useEffect(() => {
     if (session?.user) {
-      setValue('name', session.user.issuerName || session.user.name || '');
-      setValue('document', session.user.issuerDocument || session.user.cpfCnpj || '');
-      setValue('address', session.user.issuerAddress || '');
+      const user = session.user as any;
+      setValue('name', user.issuerName || user.name || '');
+      setValue('document', user.issuerDocument || user.cpfCnpj || '');
+      setValue('address', user.issuerAddress || '');
     }
   }, [session, setValue]);
 

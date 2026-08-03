@@ -13,7 +13,7 @@ export default function OnboardingWizard({ isOpen, onClose, onComplete }: Onboar
     businessName: '',
     businessType: '',
     monthlyRevenue: '',
-    goals: []
+    goals: [] as string[]
   })
 
   const steps = [

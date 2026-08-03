@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,7 @@ interface AuthFormProps {
 export default function AuthForm({ mode }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const isLogin = mode === 'login'
   const schema = isLogin ? loginSchema : registerSchema
@@ -21,7 +21,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<any>({
     resolver: zodResolver(schema),
   })
 
@@ -34,13 +34,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
         // Mock login - em produção seria integrado com NextAuth
         console.log('Login attempt:', data)
         // Simular sucesso
-        navigate('/')
+        router.push('/')
       } else {
         // Mock register - em produção seria integrado com a API
         const registerData = data as RegisterInput
         console.log('Register attempt:', registerData)
         // Simular sucesso
-        navigate('/')
+        router.push('/')
       }
     } catch (error) {
       setError('Erro inesperado. Tente novamente.')
@@ -52,7 +52,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const handleGoogleSignIn = () => {
     // Mock Google sign in - em produção seria integrado com NextAuth
     console.log('Google sign in attempt')
-    navigate('/')
+    router.push('/')
   }
 
   return (
@@ -103,7 +103,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{String(errors.name.message)}</p>
                   )}
                 </div>
               )}
@@ -116,7 +116,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                  <p className="mt-1 text-sm text-red-600">{String(errors.email.message)}</p>
                 )}
               </div>
 
@@ -128,7 +128,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                  <p className="mt-1 text-sm text-red-600">{String(errors.password.message)}</p>
                 )}
               </div>
 
@@ -141,7 +141,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{String(errors.confirmPassword.message)}</p>
                   )}
                 </div>
               )}
@@ -157,7 +157,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
             <div className="text-center">
               <button
-                onClick={() => navigate(isLogin ? '/register' : '/login')}
+                onClick={() => router.push(isLogin ? '/register' : '/login')}
                 className="text-sm text-blue-600 hover:text-blue-500"
               >
                 {isLogin ? 'Não tem conta? Registre-se' : 'Já tem conta? Entre'}

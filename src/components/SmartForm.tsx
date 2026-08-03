@@ -47,11 +47,11 @@ export default function SmartForm({ type, isOpen, onClose, onSubmit, clients = [
     }
   }
 
-  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<any>({
     resolver: zodResolver(getSchema())
   })
 
-  const watchedValues = watch()
+  // watched values
 
   useEffect(() => {
     if (isOpen) {
@@ -154,7 +154,7 @@ export default function SmartForm({ type, isOpen, onClose, onSubmit, clients = [
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
               {errors.description && (
-                <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+                <p className="text-red-500 text-sm mt-1">{String(errors.description.message)}</p>
               )}
             </div>
           )}
@@ -178,7 +178,7 @@ export default function SmartForm({ type, isOpen, onClose, onSubmit, clients = [
                 />
               </div>
               {errors.amount && (
-                <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>
+                <p className="text-red-500 text-sm mt-1">{String(errors.amount.message)}</p>
               )}
             </div>
           )}
@@ -235,7 +235,7 @@ export default function SmartForm({ type, isOpen, onClose, onSubmit, clients = [
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
               {errors.date && (
-                <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
+                <p className="text-red-500 text-sm mt-1">{String(errors.date.message)}</p>
               )}
             </div>
           )}
@@ -253,7 +253,7 @@ export default function SmartForm({ type, isOpen, onClose, onSubmit, clients = [
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
                 {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                  <p className="text-red-500 text-sm mt-1">{String(errors.name.message)}</p>
                 )}
               </div>
 
@@ -268,7 +268,7 @@ export default function SmartForm({ type, isOpen, onClose, onSubmit, clients = [
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                  <p className="text-red-500 text-sm mt-1">{String(errors.email.message)}</p>
                 )}
               </div>
 

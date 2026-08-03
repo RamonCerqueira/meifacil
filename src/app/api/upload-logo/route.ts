@@ -1,78 +1,64 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { getSession } from 'next-auth/react'
-import { prisma } from '../../lib/prisma'
-import formidable from 'formidable'
-import path from 'path'
-import fs from 'fs'
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { writeFile, mkdir } from 'fs/promises'
+import { join } from 'path'
 
-// Desabilitar o body parser padrão do Next.js
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' })
-  }
-
-  const session = await getSession({ req })
-
-  if (!session || !session.user?.email) {
-    return res.status(401).json({ message: 'Unauthorized' })
-  }
-
-  const form = formidable({
-    uploadDir: path.join(process.cwd(), 'public/uploads'),
-    keepExtensions: true,
-    maxFileSize: 5 * 1024 * 1024, // 5MB
-    filter: function ({ mimetype }) {
-      return mimetype && mimetype.includes('image')
-    },
-  })
-
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      console.error('Error parsing form:', err)
-      return res.status(500).json({ message: 'Error uploading file', error: err.message })
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const file = files.logo?.[0]
+    const data = await request.formData()
+    const file: File | null = data.get('logo') as unknown as File
 
     if (!file) {
-      return res.status(400).json({ message: 'No file uploaded' })
+      return NextResponse.json({ error: 'Nenhum arquivo enviado' }, { status: 400 })
     }
 
-    const oldPath = file.filepath
-    const newFileName = `${session.user?.email}-${Date.now()}${path.extname(file.originalFilename || '')}`
-    const newPath = path.join(form.uploadDir as string, newFileName)
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Apenas imagens são permitidas' }, { status: 400 })
+    }
 
-    // Renomear o arquivo para o novo caminho
-    fs.rename(oldPath, newPath, async (renameErr) => {
-      if (renameErr) {
-        console.error('Error renaming file:', renameErr)
-        return res.status(500).json({ message: 'Error saving file', error: renameErr.message })
-      }
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
+    }
 
-      const logoUrl = `/uploads/${newFileName}`
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
 
-      try {
-        await prisma.user.update({
-          where: { email: session.user?.email as string },
-          data: { logoUrl: logoUrl },
-        })
-        return res.status(200).json({ message: 'Logo uploaded successfully', logoUrl })
-      } catch (dbError) {
-        console.error('Error updating user logoUrl:', dbError)
-        // Se houver erro no DB, tentar remover o arquivo recém-salvo
-        fs.unlink(newPath, (unlinkErr) => {
-          if (unlinkErr) console.error('Error unlinking file after DB error:', unlinkErr)
-        })
-        return res.status(500).json({ message: 'Error updating user logo', error: (dbError as Error).message })
-      }
+    const timestamp = Date.now()
+    const extension = file.name.split('.').pop() || 'png'
+    const filename = `logo-${session.user.id}-${timestamp}.${extension}`
+
+    const uploadDir = join(process.cwd(), 'public', 'uploads')
+    const filepath = join(uploadDir, filename)
+
+    try {
+      await mkdir(uploadDir, { recursive: true })
+      await writeFile(filepath, buffer)
+    } catch (err) {
+      console.error('Erro ao escrever arquivo:', err)
+      return NextResponse.json({ error: 'Erro ao salvar arquivo no servidor' }, { status: 500 })
+    }
+
+    const logoUrl = `/uploads/${filename}`
+
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { logoUrl },
     })
-  })
+
+    return NextResponse.json({
+      message: 'Logo enviado com sucesso',
+      logoUrl,
+    })
+  } catch (error) {
+    console.error('Erro no upload do logo:', error)
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+  }
 }
-
-

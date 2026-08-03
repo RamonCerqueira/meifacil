@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import AuthPage from '@/components/AuthPage'
 
 export default function RegisterPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
 
   useEffect(() => {

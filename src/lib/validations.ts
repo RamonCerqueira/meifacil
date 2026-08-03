@@ -30,7 +30,7 @@ export const validateCpfCnpj = (value: string): boolean => {
 }
 
 // Custom Zod validator for CPF/CNPJ
-const cpfCnpjValidator = z.string().refine(validateCpfCnpj, {
+export const cpfCnpjValidator = z.string().refine(validateCpfCnpj, {
   message: 'CPF ou CNPJ inválido'
 })
 
@@ -78,8 +78,9 @@ export const transactionSchema = z.object({
   type: z.enum(['INCOME', 'EXPENSE']),
   amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
   description: z.string().min(2, 'Descrição deve ter pelo menos 2 caracteres'),
-  date: z.date(),
+  date: z.coerce.date(),
   category: z.string().optional(),
+  businessSector: z.enum(['SERVICE', 'COMMERCE', 'INDUSTRY', 'TRANSPORT']).optional(),
   clientId: z.string().optional(),
   serviceId: z.string().optional(),
 })

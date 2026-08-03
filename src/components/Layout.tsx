@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import  Link from 'next/link'
+import Link from 'next/link'
 import { usePathname } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -8,61 +9,75 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: '📊' },
+    { name: 'Fiscal & DAS', href: '/fiscal', icon: '🏛️' },
+    { name: 'Transações', href: '/transactions', icon: '💰' },
     { name: 'Clientes', href: '/clients', icon: '👥' },
     { name: 'Serviços', href: '/services', icon: '⚙️' },
-    { name: 'Transações', href: '/transactions', icon: '💰' },
     { name: 'Recibos', href: '/receipts', icon: '📄' },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:inset-0`}>
-        <div className="flex items-center justify-center h-16 bg-gradient-to-r from-blue-600 to-purple-600">
-          <h1 className="text-2xl font-bold text-white">MEI Fácil</h1>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:inset-0 border-r border-slate-100`}>
+        <div className="flex items-center justify-between px-6 h-16 bg-slate-900 text-white">
+          <div className="flex items-center space-x-2">
+            <span className="text-2xl">⚡</span>
+            <h1 className="text-xl font-bold tracking-tight">MEI Fácil</h1>
+          </div>
         </div>
         
-        <nav className="mt-8 px-4">
-      <ul className="space-y-2">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href
+        <nav className="mt-6 px-4">
+          <ul className="space-y-1.5">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
 
-          return (
-            <li key={item.name}>
-              <Link
-                href={item.href}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105"
-                    : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600"
-                }`}
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <span className="text-xl mr-3">{item.icon}</span>
-                {item.name}
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-    </nav>
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="text-lg mr-3">{item.icon}</span>
+                    {item.name}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
 
         {/* User Profile Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                U
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100 bg-slate-50/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 overflow-hidden">
+              <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">
+                {session?.user?.name ? session.user.name[0].toUpperCase() : 'M'}
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-800">Usuário</p>
-                <p className="text-xs text-gray-500">Plano Free</p>
+              <div className="truncate">
+                <p className="text-sm font-semibold text-slate-800 truncate">{session?.user?.name || 'MEI Empreendedor'}</p>
+                <p className="text-xs text-blue-600 font-medium">Plano PRO Ativo</p>
               </div>
             </div>
+            <button
+              onClick={() => signOut()}
+              title="Sair"
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

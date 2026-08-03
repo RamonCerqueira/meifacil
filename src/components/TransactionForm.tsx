@@ -1,10 +1,9 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { transactionSchema, TransactionInput } from '@/lib/validations'
-import { useClients, Client } from '@/hooks/useClients'
-import { useServices, Service } from '@/hooks/useServices'
+import { useClients } from '@/hooks/useClients'
+import { useServices } from '@/hooks/useServices'
 
 interface TransactionFormProps {
   onSubmit: (data: TransactionInput) => void

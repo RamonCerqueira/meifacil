@@ -11,10 +11,10 @@ export interface Transaction extends TransactionInput {
 const mockTransactions: Transaction[] = [
   {
     id: 't1',
-    type: 'RECEITA',
+    type: 'INCOME',
     description: 'Venda de consultoria para João Silva',
     amount: 150.00,
-    date: '2024-01-25',
+    date: new Date('2024-01-25'),
     clientId: '1',
     serviceId: 's1',
     createdAt: '2024-01-25T10:00:00Z',
@@ -22,10 +22,10 @@ const mockTransactions: Transaction[] = [
   },
   {
     id: 't2',
-    type: 'DESPESA',
+    type: 'EXPENSE',
     description: 'Compra de material de escritório',
     amount: 50.00,
-    date: '2024-01-26',
+    date: new Date('2024-01-26'),
     createdAt: '2024-01-26T11:00:00Z',
     updatedAt: '2024-01-26T11:00:00Z',
   },

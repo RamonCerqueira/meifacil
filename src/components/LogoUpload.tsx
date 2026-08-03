@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Upload, X, Check } from 'lucide-react';
+import { Upload, Check } from 'lucide-react';
 import Image from 'next/image';
 
 interface LogoUploadProps {
@@ -98,11 +98,11 @@ export function LogoUpload({ onLogoUpdate }: LogoUploadProps) {
       </div>
 
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-        {session?.user?.logoUrl ? (
+        {(session?.user as any)?.logoUrl ? (
           <div className="flex items-center justify-center space-x-4">
             <div className="relative w-24 h-24">
               <Image
-                src={session.user.logoUrl}
+                src={(session!.user as any).logoUrl}
                 alt="Logo da empresa"
                 fill
                 className="object-contain rounded"

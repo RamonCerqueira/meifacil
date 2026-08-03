@@ -18,7 +18,7 @@ export default function AuthPage({ mode, onBack, onSuccess }: AuthPageProps) {
   const [documentType, setDocumentType] = useState<'cpf' | 'cnpj'>('cpf')
 
   const schema = mode === 'login' ? loginSchema : registerSchema
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<any>({
     resolver: zodResolver(schema)
   })
 
@@ -140,7 +140,7 @@ export default function AuthPage({ mode, onBack, onSuccess }: AuthPageProps) {
                   />
                 </div>
                 {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                  <p className="text-red-500 text-sm mt-1">{String(errors.name.message)}</p>
                 )}
               </div>
             )}
@@ -161,7 +161,7 @@ export default function AuthPage({ mode, onBack, onSuccess }: AuthPageProps) {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                  <p className="text-red-500 text-sm mt-1">{String(errors.email.message)}</p>
                 )}
               </div>
             )}
@@ -196,7 +196,7 @@ export default function AuthPage({ mode, onBack, onSuccess }: AuthPageProps) {
                 </div>
               </div>
               {errors.cpfCnpj && (
-                <p className="text-red-500 text-sm mt-1">{errors.cpfCnpj.message}</p>
+                <p className="text-red-500 text-sm mt-1">{String(errors.cpfCnpj.message)}</p>
               )}
             </div>
 
@@ -222,7 +222,7 @@ export default function AuthPage({ mode, onBack, onSuccess }: AuthPageProps) {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                <p className="text-red-500 text-sm mt-1">{String(errors.password.message)}</p>
               )}
             </div>
 
@@ -249,7 +249,7 @@ export default function AuthPage({ mode, onBack, onSuccess }: AuthPageProps) {
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
+                  <p className="text-red-500 text-sm mt-1">{String(errors.confirmPassword.message)}</p>
                 )}
               </div>
             )}

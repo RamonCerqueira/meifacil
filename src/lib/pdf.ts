@@ -1,12 +1,31 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
-import { Transaction } from '@/hooks/useTransactions'
-import { Client } from '@/hooks/useClients'
-import { Service } from '@/hooks/useServices'
+
+interface ReceiptTransaction {
+  id: string
+  type: string
+  description: string
+  amount: number
+  date: string | Date
+  clientId?: string
+  serviceId?: string
+}
+
+interface ReceiptClient {
+  name: string
+  cpfCnpj?: string
+  address?: string
+}
+
+interface ReceiptService {
+  name: string
+  description?: string
+  price?: number
+}
 
 interface ReceiptData {
-  transaction: Transaction
-  client?: Client
-  service?: Service
+  transaction: ReceiptTransaction
+  client?: ReceiptClient
+  service?: ReceiptService
   companyInfo: {
     name: string
     cnpj: string
@@ -215,7 +234,7 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<Uint8Array>
 }
 
 export function downloadPDF(pdfBytes: Uint8Array, filename: string) {
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+  const blob = new Blob([pdfBytes as any], { type: 'application/pdf' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
