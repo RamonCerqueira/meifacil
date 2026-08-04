@@ -177,14 +177,6 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'month, year e status são obrigatórios' }, { status: 400 })
     }
 
-    // Pagamento confirmado exige código de autenticação
-    if (status === 'PAID' && !authCode?.trim()) {
-      return NextResponse.json(
-        { error: 'O código de autenticação do PGMEI é obrigatório para confirmar o pagamento.' },
-        { status: 400 }
-      )
-    }
-
     const defaultDasAmount = getOfficialDasAmount()
     const dueDate = new Date(year, month - 1, 20)
 

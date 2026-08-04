@@ -31,17 +31,30 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { theme, setTheme } = useTheme()
   const [showOnboarding, setShowOnboarding] = useState(false)
 
-  // Detecta usuário sem CNPJ cadastrado e exibe onboarding
+  // Detecta usuário sem CNPJ cadastrado e exibe onboarding apenas se não dispensado nesta sessão
   useEffect(() => {
-    if (session?.user && !(session.user as any).cpfCnpj) {
+    const isDismissed = typeof window !== 'undefined' && sessionStorage.getItem('mei_onboarding_dismissed') === 'true'
+    if (session?.user && !(session.user as any).cpfCnpj && !isDismissed) {
       setShowOnboarding(true)
+    } else if ((session?.user as any)?.cpfCnpj) {
+      setShowOnboarding(false)
     }
   }, [session])
+
+  const handleCompleteOnboarding = async () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('mei_onboarding_dismissed', 'true')
+    }
+    setShowOnboarding(false)
+    if (updateSession) {
+      await updateSession()
+    }
+  }
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -59,7 +72,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* ONBOARDING OBRIGATÓRIO — exibido na primeira entrada sem CNPJ */}
       {showOnboarding && (
-        <MeiOnboarding onComplete={() => setShowOnboarding(false)} />
+        <MeiOnboarding onComplete={handleCompleteOnboarding} />
       )}
       
       {/* SIDEBAR FIXA (DESKTOP & TABLET GRANDE) */}

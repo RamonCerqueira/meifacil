@@ -48,9 +48,15 @@ export async function POST(request: NextRequest) {
 
     const logoUrl = `/uploads/${filename}`
 
-    await prisma.user.update({
+    await prisma.user.upsert({
       where: { id: session.user.id },
-      data: { logoUrl },
+      update: { logoUrl },
+      create: {
+        id: session.user.id,
+        email: session.user.email || `${session.user.id}@meifacil.local`,
+        name: session.user.name || 'MEI Empreendedor',
+        logoUrl,
+      },
     })
 
     return NextResponse.json({

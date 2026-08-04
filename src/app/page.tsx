@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import Link from "next/link";
 import FaturamentoChart from "@/components/FaturamentoChart";
+import TransactionModal from "@/components/TransactionModal";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -72,6 +73,7 @@ export default function Dashboard() {
   const [fiscal, setFiscal] = useState<FiscalData | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -124,6 +126,13 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-8">
         
+        {/* MODAL REUTILIZÁVEL DE TRANSAÇÃO */}
+        <TransactionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={fetchDashboardData}
+        />
+
         {/* HEADER BEM-VINDO COM ATALHOS RÁPIDOS */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
           <div className="space-y-1.5 z-10">
@@ -141,13 +150,13 @@ export default function Dashboard() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 z-10">
-            <Link
-              href="/transactions"
-              className="flex-1 sm:flex-none inline-flex items-center justify-center space-x-2 px-5 py-3 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 shadow-lg shadow-indigo-500/25 active:scale-95 transition-all"
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center space-x-2 px-5 py-3 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/25 active:scale-95 transition-all"
             >
               <Plus className="w-4 h-4" />
-              <span>Nova Transação</span>
-            </Link>
+              <span>+ Nova Transação</span>
+            </button>
             
             <Link
               href="/receipts"
@@ -413,12 +422,12 @@ export default function Dashboard() {
                 <Layers className="w-8 h-8 text-slate-400" />
               </div>
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Nenhuma transação cadastrada ainda.</p>
-              <Link
-                href="/transactions"
-                className="mt-3 inline-flex items-center text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="mt-3 inline-flex items-center text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
               >
                 + Adicionar primeiro lançamento
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="space-y-3">

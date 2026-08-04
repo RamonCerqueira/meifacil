@@ -105,11 +105,13 @@ function PaymentModal({
   const [paidAt, setPaidAt] = useState(new Date().toISOString().split("T")[0]);
   const [error, setError] = useState("");
 
+  const formatAuthCode = (val: string) => {
+    const clean = val.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)
+    const parts = clean.match(/.{1,4}/g) || []
+    return parts.join('.')
+  }
+
   const handleSubmit = () => {
-    if (!authCode.trim()) {
-      setError("O código de autenticação é obrigatório para confirmar o pagamento.");
-      return;
-    }
     setError("");
     onConfirm(authCode.trim(), paidAt);
   };
@@ -154,13 +156,14 @@ function PaymentModal({
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1">
               <KeyRound className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Código de Autenticação do PGMEI *</span>
+              <span>Código de Autenticação do PGMEI (opcional)</span>
             </label>
             <input
               type="text"
               value={authCode}
-              onChange={(e) => { setAuthCode(e.target.value); setError(""); }}
+              onChange={(e) => { setAuthCode(formatAuthCode(e.target.value)); setError(""); }}
               placeholder="Ex: 8310.2025.0001.2345.6789"
+              maxLength={24}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
             />
             {error && (
@@ -329,9 +332,9 @@ export default function FiscalPage() {
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Modal state
   const [paymentModal, setPaymentModal] = useState<DasMonth | null>(null);
   const [installmentModal, setInstallmentModal] = useState<DasMonth | null>(null);
+  const [dasFilter, setDasFilter] = useState<'CURRENT' | 'PAID' | 'OVERDUE' | 'PENDING' | 'ALL'>('CURRENT');
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -465,6 +468,19 @@ export default function FiscalPage() {
 
   if (!session || !fiscal) return null;
 
+  const paidCount = fiscal.dasMonths.filter((m) => m.status === "PAID").length;
+  const overdueCount = fiscal.dasMonths.filter((m) => m.status === "OVERDUE").length;
+  const pendingCount = fiscal.dasMonths.filter((m) => m.status === "PENDING" || m.status === "INSTALLMENT").length;
+  const currentMonthDas = fiscal.dasMonths.find((m) => m.isCurrentMonth);
+
+  const filteredDasMonths = fiscal.dasMonths.filter((das) => {
+    if (dasFilter === "CURRENT") return das.isCurrentMonth;
+    if (dasFilter === "PAID") return das.status === "PAID";
+    if (dasFilter === "OVERDUE") return das.status === "OVERDUE";
+    if (dasFilter === "PENDING") return das.status === "PENDING" || das.status === "INSTALLMENT";
+    return true; // 'ALL'
+  });
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -521,30 +537,27 @@ export default function FiscalPage() {
           </div>
         </div>
 
-        {/* 1. GRID DE 12 MESES DO DAS */}
+        {/* 1. GRID DO DAS COM FILTROS */}
         <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-6">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center space-x-2">
                 <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                  1. Controle de Quitação do DAS (12 Meses de {fiscal.targetYear})
+                  1. Controle de Quitação do DAS ({fiscal.targetYear})
                 </h2>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Confirme o pagamento com código de autenticação do PGMEI para rastreabilidade jurídica.
+                Por padrão exibe o mês vigente. Clique nos cards abaixo para filtrar por status.
               </p>
             </div>
 
             <div className="flex items-center space-x-2 self-start sm:self-auto">
-              <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-black text-xs rounded-full border border-emerald-200 dark:border-emerald-800">
-                {fiscal.paidMonthsCount} de 12 Quitados
-              </span>
               <a
                 href="https://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-1 px-3 rounded-full bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all flex items-center space-x-1"
+                className="py-1.5 px-3 rounded-full bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all flex items-center space-x-1"
               >
                 <span>PGMEI Oficial</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -552,134 +565,246 @@ export default function FiscalPage() {
             </div>
           </div>
 
-          {/* GRID DE 12 MESES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {fiscal.dasMonths.map((das) => (
-              <div
-                key={das.month}
-                className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${das.isCurrentMonth
-                    ? "ring-2 ring-indigo-500 dark:ring-indigo-400 bg-indigo-50/30 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800"
-                    : "bg-slate-50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/80"
-                  }`}
-              >
-                {/* Header do card */}
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-1.5">
-                    <span>{das.monthName}</span>
-                    {das.isCurrentMonth && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-indigo-600 text-white">
-                        Atual
-                      </span>
-                    )}
-                  </span>
+          {/* CARDS DE RESUMO E FILTROS */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {/* Card Mês Vigente */}
+            <button
+              onClick={() => setDasFilter("CURRENT")}
+              className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                dasFilter === "CURRENT"
+                  ? "bg-indigo-600 text-white border-indigo-600 ring-2 ring-indigo-500 shadow-lg shadow-indigo-500/20"
+                  : "bg-slate-50 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-300 dark:hover:border-indigo-700 text-slate-900 dark:text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Mês Vigente</span>
+                <span className={`w-2 h-2 rounded-full ${dasFilter === "CURRENT" ? "bg-white animate-pulse" : "bg-indigo-500"}`} />
+              </div>
+              <p className="text-lg font-black mt-2 truncate">
+                {currentMonthDas?.monthName || "Mês Atual"}
+              </p>
+              <span className="text-[10px] opacity-80 font-semibold mt-1">Exibir Mês Atual</span>
+            </button>
 
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${das.status === "PAID"
-                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
+            {/* Card Quitados */}
+            <button
+              onClick={() => setDasFilter("PAID")}
+              className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                dasFilter === "PAID"
+                  ? "bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/20"
+                  : "bg-slate-50 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-300 dark:hover:border-emerald-700 text-slate-900 dark:text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Quitados</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${dasFilter === "PAID" ? "bg-white/20 text-white" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"}`}>
+                  {paidCount}
+                </span>
+              </div>
+              <p className="text-2xl font-black mt-2">{paidCount}</p>
+              <span className="text-[10px] opacity-80 font-semibold mt-1">Pagos / Quitados</span>
+            </button>
+
+            {/* Card Vencidos */}
+            <button
+              onClick={() => setDasFilter("OVERDUE")}
+              className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                dasFilter === "OVERDUE"
+                  ? "bg-rose-600 text-white border-rose-600 ring-2 ring-rose-500 shadow-lg shadow-rose-500/20"
+                  : "bg-slate-50 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/80 hover:border-rose-300 dark:hover:border-rose-700 text-slate-900 dark:text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Vencidos</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${dasFilter === "OVERDUE" ? "bg-white/20 text-white" : "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400"}`}>
+                  {overdueCount}
+                </span>
+              </div>
+              <p className="text-2xl font-black mt-2">{overdueCount}</p>
+              <span className="text-[10px] opacity-80 font-semibold mt-1">Em Atraso</span>
+            </button>
+
+            {/* Card Pendentes */}
+            <button
+              onClick={() => setDasFilter("PENDING")}
+              className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                dasFilter === "PENDING"
+                  ? "bg-amber-600 text-white border-amber-600 ring-2 ring-amber-500 shadow-lg shadow-amber-500/20"
+                  : "bg-slate-50 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/80 hover:border-amber-300 dark:hover:border-amber-700 text-slate-900 dark:text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Pendentes</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${dasFilter === "PENDING" ? "bg-white/20 text-white" : "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400"}`}>
+                  {pendingCount}
+                </span>
+              </div>
+              <p className="text-2xl font-black mt-2">{pendingCount}</p>
+              <span className="text-[10px] opacity-80 font-semibold mt-1">A Vencer / Aberto</span>
+            </button>
+
+            {/* Card Todos */}
+            <button
+              onClick={() => setDasFilter("ALL")}
+              className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between col-span-2 sm:col-span-1 ${
+                dasFilter === "ALL"
+                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 ring-2 ring-slate-700 shadow-lg"
+                  : "bg-slate-50 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-700/80 hover:border-slate-400 text-slate-900 dark:text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider opacity-80">Todos</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                  12
+                </span>
+              </div>
+              <p className="text-2xl font-black mt-2">12</p>
+              <span className="text-[10px] opacity-80 font-semibold mt-1">Ver 12 Meses</span>
+            </button>
+          </div>
+
+          {/* GRID DE MESES FILTRADOS */}
+          {filteredDasMonths.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredDasMonths.map((das) => (
+                <div
+                  key={das.month}
+                  className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${das.isCurrentMonth
+                      ? "ring-2 ring-indigo-500 dark:ring-indigo-400 bg-indigo-50/30 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800"
+                      : "bg-slate-50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/80"
+                    }`}
+                >
+                  {/* Header do card */}
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-1.5">
+                      <span>{das.monthName}</span>
+                      {das.isCurrentMonth && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-indigo-600 text-white">
+                          Atual
+                        </span>
+                      )}
+                    </span>
+
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${das.status === "PAID"
+                          ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
+                          : das.status === "OVERDUE"
+                            ? "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400"
+                            : das.status === "INSTALLMENT"
+                              ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400"
+                              : "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400"
+                        }`}
+                    >
+                      {das.status === "PAID"
+                        ? "✓ PAGO"
                         : das.status === "OVERDUE"
-                          ? "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400"
+                          ? "⚠ ATRASO"
                           : das.status === "INSTALLMENT"
-                            ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400"
-                            : "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400"
-                      }`}
-                  >
-                    {das.status === "PAID"
-                      ? "✓ PAGO"
-                      : das.status === "OVERDUE"
-                        ? "⚠ ATRASO"
-                        : das.status === "INSTALLMENT"
-                          ? "↩ PARCELA"
-                          : "PENDENTE"}
-                  </span>
-                </div>
-
-                {/* Valor e vencimento */}
-                <div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">Valor DAS</span>
-                    <span className="text-lg font-black text-slate-900 dark:text-white">
-                      R$ {das.amount.toFixed(2)}
+                            ? "↩ PARCELA"
+                            : "PENDENTE"}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                    Vencimento: {das.dueDate}
-                  </p>
-                </div>
 
-                {/* Auditoria — exibido apenas para meses pagos/parcelados */}
-                {das.status === "PAID" && das.authCode && (
-                  <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-0.5">
-                    <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center space-x-1">
-                      <KeyRound className="w-3 h-3" />
-                      <span>Autenticação:</span>
+                  {/* Valor e vencimento */}
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Valor DAS</span>
+                      <span className="text-lg font-black text-slate-900 dark:text-white">
+                        R$ {das.amount.toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      Vencimento: {das.dueDate}
                     </p>
-                    <p className="text-[10px] font-mono text-emerald-800 dark:text-emerald-300 break-all">
-                      {das.authCode}
-                    </p>
-                    {das.paidAt && (
-                      <p className="text-[10px] text-emerald-600 dark:text-emerald-500">
-                        Pago em: {formatDate(das.paidAt)}
+                  </div>
+
+                  {/* Auditoria — exibido apenas para meses pagos/parcelados */}
+                  {das.status === "PAID" && das.authCode && (
+                    <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-0.5">
+                      <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center space-x-1">
+                        <KeyRound className="w-3 h-3" />
+                        <span>Autenticação:</span>
                       </p>
-                    )}
-                  </div>
-                )}
+                      <p className="text-[10px] font-mono text-emerald-800 dark:text-emerald-300 break-all">
+                        {das.authCode}
+                      </p>
+                      {das.paidAt && (
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-500">
+                          Pago em: {formatDate(das.paidAt)}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
-                {das.status === "INSTALLMENT" && das.installmentRef && (
-                  <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-0.5">
-                    <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400 flex items-center space-x-1">
-                      <Repeat2 className="w-3 h-3" />
-                      <span>Parcelamento:</span>
-                    </p>
-                    <p className="text-[10px] font-mono text-blue-800 dark:text-blue-300 break-all">
-                      {das.installmentRef}
-                    </p>
-                  </div>
-                )}
+                  {das.status === "INSTALLMENT" && das.installmentRef && (
+                    <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-0.5">
+                      <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400 flex items-center space-x-1">
+                        <Repeat2 className="w-3 h-3" />
+                        <span>Parcelamento:</span>
+                      </p>
+                      <p className="text-[10px] font-mono text-blue-800 dark:text-blue-300 break-all">
+                        {das.installmentRef}
+                      </p>
+                    </div>
+                  )}
 
-                {/* Botões de ação */}
-                <div className="space-y-1.5">
-                  {das.status === "PAID" ? (
-                    <button
-                      onClick={() => handleUndoPayment(das)}
-                      disabled={saving}
-                      className="w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600"
-                    >
-                      <span>Desfazer Pagamento</span>
-                    </button>
-                  ) : das.status === "INSTALLMENT" ? (
-                    <button
-                      onClick={() => setPaymentModal(das)}
-                      className="w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Confirmar Quitação</span>
-                    </button>
-                  ) : (
-                    <>
+                  {/* Botões de ação */}
+                  <div className="space-y-1.5">
+                    {das.status === "PAID" ? (
+                      <button
+                        onClick={() => handleUndoPayment(das)}
+                        disabled={saving}
+                        className="w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600"
+                      >
+                        <span>Desfazer Pagamento</span>
+                      </button>
+                    ) : das.status === "INSTALLMENT" ? (
                       <button
                         onClick={() => setPaymentModal(das)}
-                        disabled={saving}
                         className="w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Marcar como Pago</span>
+                        <span>Confirmar Quitação</span>
                       </button>
-                      {das.status === "OVERDUE" && (
+                    ) : (
+                      <>
                         <button
-                          onClick={() => setInstallmentModal(das)}
+                          onClick={() => setPaymentModal(das)}
                           disabled={saving}
-                          className="w-full py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 bg-blue-100 dark:bg-blue-950 hover:bg-blue-200 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-400"
+                          className="w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                         >
-                          <Repeat2 className="w-3.5 h-3.5" />
-                          <span>Registrar Parcelamento</span>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Marcar como Pago</span>
                         </button>
-                      )}
-                    </>
-                  )}
+                        {das.status === "OVERDUE" && (
+                          <button
+                            onClick={() => setInstallmentModal(das)}
+                            disabled={saving}
+                            className="w-full py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-1.5 bg-blue-100 dark:bg-blue-950 hover:bg-blue-200 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-400"
+                          >
+                            <Repeat2 className="w-3.5 h-3.5" />
+                            <span>Registrar Parcelamento</span>
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+              <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                Nenhum mês encontrado com o filtro selecionado.
+              </p>
+              <button
+                onClick={() => setDasFilter("ALL")}
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Exibir todos os 12 meses
+              </button>
+            </div>
+          )}
 
           {/* TABELA DE VALORES DO DAS */}
           <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
