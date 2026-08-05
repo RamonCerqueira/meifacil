@@ -22,7 +22,8 @@ import {
   Sparkles,
   Building2,
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  Crown
 } from 'lucide-react'
 
 interface LayoutProps {
@@ -64,6 +65,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Serviços', href: '/services', icon: Briefcase },
     { name: 'Recibos', href: '/receipts', icon: FileCheck2 },
     { name: 'Meu CNPJ MEI', href: '/settings', icon: Building2 },
+    { name: 'Plano PRO ⚡', href: '/plans', icon: Crown },
     { name: 'Ajuda & Guia MEI', href: '/help', icon: HelpCircle },
   ]
 

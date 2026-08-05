@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { LogoUpload } from "@/components/LogoUpload";
+import { PlanUpgradeCard } from "@/components/PlanUpgradeCard";
 import { formatCpfCnpj } from "@/lib/validations";
 import { 
   Building2, 
@@ -136,14 +137,17 @@ export default function SettingsPage() {
                 <Building2 className="w-6 h-6" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                Meu CNPJ MEI & Gov.br
+                Configurações & Plano PRO
               </h1>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-              Sincronização automática com a Receita Federal, emissão de NFS-e e identidade dos recibos.
+              Gerencie sua assinatura, sincronização automática com a Receita Federal e identidade dos recibos.
             </p>
           </div>
         </div>
+
+        {/* PLANO & ASSINATURA (MERCADO PAGO) */}
+        <PlanUpgradeCard />
 
         {/* 1. BUSCA INTELIGENTE GOV.BR */}
         <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-950 text-white shadow-xl border border-indigo-900/50 relative overflow-hidden space-y-4">
