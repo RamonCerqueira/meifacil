@@ -50,6 +50,8 @@ export default function SettingsPage() {
         if (data.issuerName) setName(data.issuerName);
         if (data.issuerDocument) setCnpjInput(formatCpfCnpj(data.issuerDocument));
         if (data.issuerAddress) setAddress(data.issuerAddress);
+        if (data.openingDate) setOpeningDate(new Date(data.openingDate).toISOString().slice(0, 10));
+        if (data.defaultSector) setSector(data.defaultSector);
       }
     } catch (err) {
       console.error('Erro ao carregar dados do usuário:', err);
@@ -77,10 +79,10 @@ export default function SettingsPage() {
       setAddress(data.addressFull || `${data.logradouro}, ${data.numero} - ${data.bairro}, ${data.municipio}/${data.uf}`);
       setOpeningDate(data.dataAbertura);
       
-      setSyncStatus(`✓ CNPJ Sincronizado com o Gov.br (${data.situacaoCadastral})`);
+      setSyncStatus(`✓ Dados públicos do CNPJ consultados (${data.situacaoCadastral})`);
     } catch (err) {
       console.error('Erro na consulta Gov.br:', err);
-      alert('Erro ao consultar CNPJ na Receita Federal.');
+      alert('Não foi possível consultar o CNPJ agora. Tente novamente ou preencha os dados manualmente.');
     } finally {
       setSearchingGov(false);
     }
@@ -141,7 +143,7 @@ export default function SettingsPage() {
               </h1>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-              Gerencie sua assinatura, sincronização automática com a Receita Federal e identidade dos recibos.
+              Gerencie sua assinatura, consulta cadastral pública e identidade dos recibos.
             </p>
           </div>
         </div>
@@ -153,11 +155,11 @@ export default function SettingsPage() {
         <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-950 text-white shadow-xl border border-indigo-900/50 relative overflow-hidden space-y-4">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-lg font-black tracking-wide text-white">Sincronização Automática com a Receita Federal</h2>
+            <h2 className="text-lg font-black tracking-wide text-white">Consulta de Dados Públicos do CNPJ</h2>
           </div>
 
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl">
-            Digite seu CNPJ MEI abaixo para puxar instantaneamente sua Razão Social, Data de Abertura e Endereço Oficial sem digitar nada manualmente.
+            Consulte razão social, data de abertura e endereço na base pública do CNPJ. Confira as informações antes de salvar; esta consulta não acessa áreas autenticadas do Gov.br.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -181,7 +183,7 @@ export default function SettingsPage() {
               ) : (
                 <Search className="w-5 h-5" />
               )}
-              <span>{searchingGov ? 'Sincronizando...' : 'Buscar no Gov.br'}</span>
+              <span>{searchingGov ? 'Consultando...' : 'Consultar CNPJ'}</span>
             </button>
           </div>
 

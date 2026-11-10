@@ -8,7 +8,12 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const authHeader = request.headers.get('authorization')
   const secretParam = searchParams.get('secret')
-  const expectedSecret = process.env.CRON_SECRET || 'mei-facil-cron-secret-123456'
+  const expectedSecret = process.env.CRON_SECRET
+
+  if (!expectedSecret) {
+    console.error('CRON_SECRET não configurado')
+    return NextResponse.json({ error: 'Serviço não configurado' }, { status: 503 })
+  }
 
   if (secretParam !== expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
@@ -16,8 +21,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const now = new Date()
-    const currentMonth = now.getMonth() + 1
-    const currentYear = now.getFullYear()
+    // O DAS vence no mês seguinte à competência: em novembro, lembra outubro.
+    const competenceDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const currentMonth = competenceDate.getMonth() + 1
+    const currentYear = competenceDate.getFullYear()
     const isPastDue = now.getDate() > 20
 
     const monthNames = [
@@ -53,8 +60,8 @@ export async function GET(request: NextRequest) {
       // Se já estiver PAGO ou PARCELADO, ignora
       if (status === 'PAID' || status === 'INSTALLMENT') continue
 
-      const amount = payment ? Number(payment.amount) : getOfficialDasAmount(user.defaultSector || undefined)
-      const dueDate = `20/${currentMonth.toString().padStart(2, '0')}/${currentYear}`
+      const amount = payment ? Number(payment.amount) : getOfficialDasAmount(user.defaultSector || undefined, currentYear)
+      const dueDate = new Date(currentYear, currentMonth, 20).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
 
       const emailResult = await sendDasReminderEmail({
         toEmail: user.email,

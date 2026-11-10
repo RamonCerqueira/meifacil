@@ -8,6 +8,7 @@ import {
   calculatePurchaseLimitAlert,
   generateAnnualDasnSummary,
   getOfficialDasAmount,
+  getDasReference,
   BusinessSector,
 } from '@/lib/fiscal'
 
@@ -19,15 +20,18 @@ export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
     let openingDate = new Date()
-    let userName = session?.user?.name || 'MEI Empreendedor'
-    let userCpfCnpj = '00.000.000/0001-00'
+    let userName = session.user.name || 'MEI Empreendedor'
+    let userCpfCnpj = ''
     let userSector = 'SERVICE'
     let transactions: any[] = []
     let dasPaymentsDb: any[] = []
 
-    if (session?.user?.id) {
-      try {
+    try {
         const user = await prisma.user.findUnique({
           where: { id: session.user.id },
           select: { openingDate: true, createdAt: true, name: true, cpfCnpj: true, defaultSector: true },
@@ -52,9 +56,9 @@ export async function GET(request: Request) {
         dasPaymentsDb = await prisma.dasPayment.findMany({
           where: { userId: session.user.id, year: targetYear },
         })
-      } catch (dbErr) {
-        console.warn('Banco de dados indisponível (usando modo demonstrativo de 12 meses):', dbErr)
-      }
+    } catch (dbErr) {
+      console.error('Banco de dados indisponível ao consultar dados fiscais:', dbErr)
+      return NextResponse.json({ error: 'Dados fiscais indisponíveis no momento.' }, { status: 503 })
     }
 
     let grossRevenueYear = 0
@@ -81,11 +85,15 @@ export async function GET(request: Request) {
       }
     })
 
-    const defaultDasAmount = getOfficialDasAmount(userSector)
+    let defaultDasAmount: number
+    try {
+      defaultDasAmount = getOfficialDasAmount(userSector, targetYear)
+    } catch (error) {
+      return NextResponse.json({ error: error instanceof Error ? error.message : 'Valor do DAS indisponível.' }, { status: 422 })
+    }
 
     // Gerar os 12 meses do ano vigente (Janeiro a Dezembro) com status dinâmico
-    const currentMonthNum = new Date().getMonth() + 1
-    const currentDay = new Date().getDate()
+    const now = new Date()
     const monthNames = [
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -97,22 +105,14 @@ export async function GET(request: Request) {
       
       let status = 'PENDING'
       let amount = dbPayment?.amount ? Number(dbPayment.amount) : defaultDasAmount
+      // A competência de janeiro, por exemplo, vence em 20 de fevereiro.
+      const dueDateValue = new Date(targetYear, mNum, 20, 23, 59, 59)
 
       if (dbPayment) {
         status = dbPayment.status
       } else {
-        if (targetYear < new Date().getFullYear()) {
+        if (dueDateValue < now) {
           status = 'OVERDUE'
-        } else if (targetYear === new Date().getFullYear()) {
-          if (mNum < currentMonthNum) {
-            status = 'OVERDUE'
-          } else if (mNum === currentMonthNum && currentDay > 20) {
-            status = 'OVERDUE'
-          } else {
-            status = 'PENDING'
-          }
-        } else {
-          status = 'PENDING'
         }
       }
 
@@ -121,9 +121,9 @@ export async function GET(request: Request) {
         monthName: monthNames[index],
         year: targetYear,
         amount,
-        dueDate: `20/${String(mNum).padStart(2, '0')}/${targetYear}`,
+        dueDate: dueDateValue.toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
         status, // 'PAID' | 'PENDING' | 'OVERDUE' | 'INSTALLMENT'
-        isCurrentMonth: targetYear === new Date().getFullYear() && mNum === currentMonthNum,
+        isCurrentMonth: dueDateValue.getUTCFullYear() === now.getFullYear() && dueDateValue.getUTCMonth() === now.getMonth(),
         authCode: dbPayment?.authCode || null,
         paidAt: dbPayment?.paidAt || null,
         installmentRef: dbPayment?.installmentRef || null,
@@ -141,7 +141,7 @@ export async function GET(request: Request) {
       }))
     )
 
-    const currentMonthDas = dasMonths.find((m) => m.isCurrentMonth) || dasMonths[currentMonthNum - 1]
+    const currentMonthDas = dasMonths.find((m) => m.isCurrentMonth) || dasMonths[0]
 
     return NextResponse.json({
       targetYear,
@@ -153,6 +153,7 @@ export async function GET(request: Request) {
       currentDasStatus: currentMonthDas.status,
       currentDasAmount: currentMonthDas.amount,
       defaultDasAmount,
+      dasReference: getDasReference(targetYear),
       dasMonths,
       paidMonthsCount: dasMonths.filter((m) => m.status === 'PAID').length,
     })
@@ -177,8 +178,17 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'month, year e status são obrigatórios' }, { status: 400 })
     }
 
-    const defaultDasAmount = getOfficialDasAmount()
-    const dueDate = new Date(year, month - 1, 20)
+    const parsedMonth = Number(month)
+    const parsedYear = Number(year)
+    if (!Number.isInteger(parsedMonth) || parsedMonth < 1 || parsedMonth > 12 || !Number.isInteger(parsedYear)) {
+      return NextResponse.json({ error: 'Competência inválida.' }, { status: 400 })
+    }
+    if (!['PAID', 'PENDING', 'OVERDUE', 'INSTALLMENT'].includes(status)) {
+      return NextResponse.json({ error: 'Status inválido.' }, { status: 400 })
+    }
+
+    const defaultDasAmount = getOfficialDasAmount(undefined, parsedYear)
+    const dueDate = new Date(parsedYear, parsedMonth, 20, 23, 59, 59)
 
     const updateData: any = {
       status,
@@ -199,15 +209,15 @@ export async function PATCH(request: Request) {
       where: {
         userId_year_month: {
           userId: session.user.id,
-          year: parseInt(year),
-          month: parseInt(month),
+          year: parsedYear,
+          month: parsedMonth,
         },
       },
       update: updateData,
       create: {
         userId: session.user.id,
-        year: parseInt(year),
-        month: parseInt(month),
+        year: parsedYear,
+        month: parsedMonth,
         ...updateData,
       },
     })

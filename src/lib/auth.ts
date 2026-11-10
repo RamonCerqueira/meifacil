@@ -6,7 +6,7 @@ import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || 'mei-facil-secret-key-development-fallback-12345678',
+  secret: process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -49,16 +49,11 @@ export const authOptions: NextAuthOptions = {
             }
           }
         } catch (error) {
-          console.warn('[NextAuth] Banco de dados offline ou inacessível. Usando usuário de demonstração.', error)
+          console.error('[NextAuth] Banco de dados offline ou inacessível.', error)
         }
 
-        // Fallback de demonstração para desenvolvimento sem DB ativo
-        return {
-          id: 'demo-user-1',
-          email: 'demo@meifacil.com',
-          name: 'MEI Empreendedor (Demo)',
-          image: null,
-        }
+        // Nunca autentique uma credencial inválida quando o banco estiver indisponível.
+        return null
       }
     })
   ],

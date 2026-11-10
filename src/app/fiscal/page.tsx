@@ -85,6 +85,11 @@ interface FiscalData {
   currentDasStatus: "PENDING" | "PAID" | "OVERDUE" | "INSTALLMENT";
   currentDasAmount: number;
   defaultDasAmount: number;
+  dasReference: {
+    minimumWage: number;
+    regularInss: number;
+    truckerInss: number;
+  } | null;
   dasMonths: DasMonth[];
   paidMonthsCount: number;
 }
@@ -810,14 +815,14 @@ export default function FiscalPage() {
           <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
             <h4 className="font-bold text-xs text-slate-900 dark:text-white flex items-center space-x-1.5">
               <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span>Valores Oficiais do DAS por Atividade (Salário Mínimo R$ 1.412,00 — 2024)</span>
+              <span>Valores do DAS por Atividade (Salário Mínimo R$ {fiscal.dasReference?.minimumWage.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} — {fiscal.targetYear})</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs text-slate-600 dark:text-slate-300">
               {[
-                { label: "Serviços (ISS)", value: "R$ 75,60", detail: "INSS R$ 70,60 + ISS R$ 5,00" },
-                { label: "Comércio/Indústria (ICMS)", value: "R$ 71,60", detail: "INSS R$ 70,60 + ICMS R$ 1,00" },
-                { label: "Comércio & Serviços (Misto)", value: "R$ 76,60", detail: "INSS R$ 70,60 + ISS/ICMS R$ 6,00" },
-                { label: "Caminhoneiro (12% INSS)", value: "R$ 174,44", detail: "INSS 12% R$ 169,44 + Imposto" },
+                { label: "Serviços (ISS)", value: `R$ ${((fiscal.dasReference?.regularInss || 0) + 5).toFixed(2).replace('.', ',')}`, detail: `INSS R$ ${(fiscal.dasReference?.regularInss || 0).toFixed(2).replace('.', ',')} + ISS R$ 5,00` },
+                { label: "Comércio/Indústria (ICMS)", value: `R$ ${((fiscal.dasReference?.regularInss || 0) + 1).toFixed(2).replace('.', ',')}`, detail: `INSS R$ ${(fiscal.dasReference?.regularInss || 0).toFixed(2).replace('.', ',')} + ICMS R$ 1,00` },
+                { label: "Comércio & Serviços (Misto)", value: `R$ ${((fiscal.dasReference?.regularInss || 0) + 6).toFixed(2).replace('.', ',')}`, detail: `INSS R$ ${(fiscal.dasReference?.regularInss || 0).toFixed(2).replace('.', ',')} + ISS/ICMS R$ 6,00` },
+                { label: "Caminhoneiro (12% INSS)", value: `R$ ${((fiscal.dasReference?.truckerInss || 0) + 1).toFixed(2).replace('.', ',')}`, detail: `INSS 12% R$ ${(fiscal.dasReference?.truckerInss || 0).toFixed(2).replace('.', ',')} + imposto` },
               ].map((item) => (
                 <div key={item.label} className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                   <p className="font-bold text-slate-900 dark:text-white">{item.label}</p>

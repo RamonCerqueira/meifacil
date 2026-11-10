@@ -10,21 +10,37 @@ export const PROFIT_PRESUMPTION_RATES: Record<BusinessSector, number> = {
   TRANSPORT: 0.16, // 16% para Transporte de Passageiros
 }
 
-// Tabela oficial de valores base do DAS por categoria contábil (Salário Mínimo 2024 = R$ 1.412,00)
-// INSS (5% = R$ 70,60) / ISS (R$ 5,00) / ICMS (R$ 1,00) / Caminhoneiro (12% = R$ 169,44)
-export function getOfficialDasAmount(sector?: string): number {
+// Valores oficiais do DAS-MEI por ano. O INSS é 5% do salário mínimo (12% para
+// MEI caminhoneiro), acrescido de R$ 1,00 de ICMS e/ou R$ 5,00 de ISS.
+// Fonte: Portal Empresas & Negócios / gov.br. Atualizar esta tabela a cada ano.
+const DAS_BY_YEAR: Record<number, { minimumWage: number; regularInss: number; truckerInss: number }> = {
+  2024: { minimumWage: 1412, regularInss: 70.60, truckerInss: 169.44 },
+  2025: { minimumWage: 1518, regularInss: 75.90, truckerInss: 182.16 },
+  2026: { minimumWage: 1621, regularInss: 81.05, truckerInss: 194.52 },
+}
+
+export function getOfficialDasAmount(sector?: string, year = new Date().getFullYear()): number {
+  const values = DAS_BY_YEAR[year]
+  if (!values) {
+    throw new Error(`Valor oficial do DAS ainda não cadastrado para ${year}.`)
+  }
+
   switch (sector) {
     case 'COMMERCE':
     case 'INDUSTRY':
-      return 71.60 // R$ 70,60 INSS + R$ 1,00 ICMS
+      return values.regularInss + 1
     case 'TRANSPORT':
-      return 174.44 // MEI Caminhoneiro 12% INSS + ICMS/ISS
+      return values.truckerInss + 1
     case 'HYBRID':
-      return 76.60 // R$ 70,60 INSS + R$ 1,00 ICMS + R$ 5,00 ISS
+      return values.regularInss + 6
     case 'SERVICE':
     default:
-      return 75.60 // R$ 70,60 INSS + R$ 5,00 ISS
+      return values.regularInss + 5
   }
+}
+
+export function getDasReference(year: number) {
+  return DAS_BY_YEAR[year] ?? null
 }
 
 export interface TetoMEIResult {

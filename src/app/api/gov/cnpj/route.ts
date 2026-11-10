@@ -21,13 +21,15 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      // Consulta oficial da base pública da Receita Federal via BrasilAPI (Rápida e sem API Key)
+      // A BrasilAPI distribui os dados públicos do CNPJ. Não se trata de uma
+      // autenticação gov.br nem substitui certidões ou consultas restritas.
       const resGov = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, {
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'MEIFacil-Contabil/1.0',
         },
-        next: { revalidate: 3600 }
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(8_000),
       })
 
       if (resGov.ok) {
@@ -48,31 +50,19 @@ export async function GET(request: NextRequest) {
           municipio: data.municipio || '',
           uf: data.uf || '',
           cep: data.cep || '',
-          addressFull: `${data.logradouro || ''}, ${data.numero || 'S/N'} - ${data.bairro || ''}, ${data.municipio || ''} - ${data.uf || ''}, CEP: ${data.cep || ''}`
+          addressFull: `${data.logradouro || ''}, ${data.numero || 'S/N'} - ${data.bairro || ''}, ${data.municipio || ''} - ${data.uf || ''}, CEP: ${data.cep || ''}`,
+          source: 'BrasilAPI — dados públicos do CNPJ',
+          fetchedAt: new Date().toISOString(),
         })
       }
     } catch (apiErr) {
-      console.warn('Erro ao consultar API externa do Gov/BrasilAPI, gerando dados cadastrais estruturados:', apiErr)
+      console.warn('Erro ao consultar a base pública de CNPJ:', apiErr)
     }
 
-    // Fallback gracioso com estrutura contábil se o serviço remoto demorar ou estiver em testes
-    return NextResponse.json({
-      cnpj: cnpj,
-      razaoSocial: 'MEI Empreendedor Serviços & Comércio Ltda',
-      nomeFantasia: 'MEI Fácil Serviços',
-      dataAbertura: '2023-01-15',
-      situacaoCadastral: 'ATIVA',
-      opcaoSimei: true,
-      cnaePrincipalDescricao: 'Prestação de serviços de consultoria e suporte técnico',
-      cnaePrincipalCodigo: 6209100,
-      logradouro: 'Avenida Paulista',
-      numero: '1000',
-      bairro: 'Bela Vista',
-      municipio: 'São Paulo',
-      uf: 'SP',
-      cep: '01310-100',
-      addressFull: 'Avenida Paulista, 1000 - Bela Vista, São Paulo - SP, CEP: 01310-100'
-    })
+    return NextResponse.json(
+      { error: 'Consulta cadastral indisponível. Tente novamente ou preencha os dados manualmente.' },
+      { status: 503 }
+    )
 
   } catch (error) {
     console.error('Erro na rota de consulta CNPJ Gov.br:', error)

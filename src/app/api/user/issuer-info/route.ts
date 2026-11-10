@@ -35,20 +35,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nao autorizado' }, { status: 401 })
     }
     const body = await request.json()
-    const { name, document, address } = body
+    const { name, document, address, openingDate, defaultSector } = body
     if (!name || !document || !address) {
       return NextResponse.json({ error: 'Todos os campos sao obrigatorios' }, { status: 400 })
     }
+    const cleanDocument = String(document).replace(/\D/g, '')
+    if (cleanDocument.length !== 14) {
+      return NextResponse.json({ error: 'Informe um CNPJ válido com 14 dígitos.' }, { status: 400 })
+    }
+    if (defaultSector && !['SERVICE', 'COMMERCE', 'INDUSTRY', 'TRANSPORT'].includes(defaultSector)) {
+      return NextResponse.json({ error: 'Setor de atuação inválido.' }, { status: 400 })
+    }
+    const parsedOpeningDate = openingDate ? new Date(openingDate) : null
+    if (parsedOpeningDate && Number.isNaN(parsedOpeningDate.getTime())) {
+      return NextResponse.json({ error: 'Data de abertura inválida.' }, { status: 400 })
+    }
+
     await prisma.user.upsert({
       where: { id: session.user.id },
-      update: { issuerName: name, issuerDocument: document, issuerAddress: address },
+      update: {
+        issuerName: name,
+        issuerDocument: cleanDocument,
+        issuerAddress: address,
+        cpfCnpj: cleanDocument,
+        openingDate: parsedOpeningDate,
+        ...(defaultSector ? { defaultSector } : {}),
+      },
       create: {
         id: session.user.id,
         email: session.user.email || `${session.user.id}@meifacil.local`,
         name: session.user.name || 'MEI Empreendedor',
         issuerName: name,
-        issuerDocument: document,
+        issuerDocument: cleanDocument,
         issuerAddress: address,
+        cpfCnpj: cleanDocument,
+        openingDate: parsedOpeningDate,
+        ...(defaultSector ? { defaultSector } : {}),
       },
     })
     return NextResponse.json({ message: 'Informacoes do emissor atualizadas com sucesso' })

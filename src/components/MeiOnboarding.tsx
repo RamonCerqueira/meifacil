@@ -22,6 +22,8 @@ export default function MeiOnboarding({ onComplete }: MeiOnboardingProps) {
   const [cpfCnpj, setCpfCnpj] = useState('')
   const [sector, setSector] = useState('SERVICE')
   const [openingDate, setOpeningDate] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [lookingUpCnpj, setLookingUpCnpj] = useState(false)
 
   const formatCpfCnpj = (v: string) => {
     const digits = v.replace(/\D/g, '').slice(0, 14)
@@ -38,11 +40,24 @@ export default function MeiOnboarding({ onComplete }: MeiOnboardingProps) {
       .replace(/(\d{4})(\d)/, '$1-$2')
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const clean = cpfCnpj.replace(/\D/g, '')
     if (step === 1 && clean.length !== 11 && clean.length !== 14) {
       setError('Informe um CPF válido (11 dígitos) ou CNPJ (14 dígitos).')
       return
+    }
+    if (step === 1 && clean.length === 14) {
+      try {
+        setLookingUpCnpj(true)
+        const response = await fetch(`/api/gov/cnpj?cnpj=${clean}`)
+        if (response.ok) {
+          const company = await response.json()
+          setCompanyName(company.razaoSocial || company.nomeFantasia || '')
+          if (company.dataAbertura) setOpeningDate(company.dataAbertura)
+        }
+      } finally {
+        setLookingUpCnpj(false)
+      }
     }
     if (step === 3) {
       handleFinish()
@@ -178,6 +193,8 @@ export default function MeiOnboarding({ onComplete }: MeiOnboardingProps) {
                   Você pode usar o sistema tanto como Pessoa Física (CPF) quanto como Pessoa Jurídica (CNPJ MEI).
                 </span>
               </div>
+              {lookingUpCnpj && <p className="text-xs font-semibold text-indigo-600">Consultando dados públicos do CNPJ…</p>}
+              {companyName && <p className="text-xs font-semibold text-emerald-600">CNPJ encontrado: {companyName}</p>}
             </div>
           )}
 

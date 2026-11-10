@@ -88,6 +88,9 @@ DATABASE_URL="postgresql://username:password@localhost:5432/mei_facil"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secret-key"
 
+# Obrigatório para proteger o disparo de lembretes do DAS
+CRON_SECRET="uma-chave-longa-e-aleatoria"
+
 # Google OAuth
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
@@ -165,3 +168,13 @@ A aplicação estará disponível em `http://localhost:3000`
 ---
 
 **MEI Fácil** - Simplificando a gestão financeira para MEIs brasileiros 🇧🇷
+
+## Integrações governamentais
+
+- **Dados públicos de CNPJ:** a aplicação consulta a BrasilAPI, que distribui dados públicos cadastrais. O resultado deve ser conferido pelo usuário e não representa autenticação no Gov.br, certidão, situação fiscal ou adesão ao SIMEI.
+- **Conecta Gov / Serpro:** a API oficial de consulta ao CNPJ exige credenciamento, chaves e regras de firewall. Não há integração automática sem essas credenciais.
+- **NFS-e e PGMEI:** o sistema direciona o usuário aos portais oficiais; emissão de NFS-e e geração/pagamento do DAS não são feitos pela aplicação.
+
+## Aplicativo Android e iOS
+
+O projeto inclui a base Capacitor. O aplicativo abre a versão publicada do Next.js para preservar autenticação e APIs server-side. Antes de sincronizar os projetos nativos, configure `CAPACITOR_SERVER_URL` com a URL HTTPS de produção e execute `npm run mobile:sync`. Use `npm run mobile:android` ou `npm run mobile:ios` para abrir os projetos nas IDEs nativas.

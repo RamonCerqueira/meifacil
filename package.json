@@ -12,9 +12,16 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "mobile:sync": "cap sync",
+    "mobile:android": "cap open android",
+    "mobile:ios": "cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
     "@hookform/resolvers": "^3.3.2",
     "@mercadopago/sdk-react": "^1.0.7",
     "@next-auth/prisma-adapter": "^1.0.7",

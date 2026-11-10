@@ -8,9 +8,7 @@ import { z } from 'zod'
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json([])
-    }
+    if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
     try {
       const transactions = await prisma.transaction.findMany({
@@ -31,10 +29,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     const body = await request.json()
     const validatedData = transactionSchema.parse(body)
 
-    const userId = session?.user?.id || 'demo-user-id'
+    const userId = session.user.id
 
     try {
       const newTransaction = await prisma.transaction.create({
@@ -49,13 +48,8 @@ export async function POST(request: Request) {
       })
       return NextResponse.json(newTransaction, { status: 201 })
     } catch (dbErr) {
-      console.warn('DB indisponível em POST /api/transactions, simulando retorno:', dbErr)
-      return NextResponse.json({
-        id: `mock-${Date.now()}`,
-        ...validatedData,
-        userId,
-        createdAt: new Date().toISOString(),
-      }, { status: 201 })
+      console.error('DB indisponível em POST /api/transactions:', dbErr)
+      return NextResponse.json({ error: 'Não foi possível salvar a transação.' }, { status: 503 })
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -101,11 +95,10 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
 
-    try {
-      await prisma.transaction.delete({ where: { id } })
-    } catch (dbErr) {
-      console.warn('DB indisponível ao deletar, ignorando:', dbErr)
-    }
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    const deleted = await prisma.transaction.deleteMany({ where: { id, userId: session.user.id } })
+    if (!deleted.count) return NextResponse.json({ error: 'Transação não encontrada' }, { status: 404 })
     return NextResponse.json({ message: 'Transação excluída com sucesso' })
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao excluir' }, { status: 500 })
